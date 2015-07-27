@@ -1,0 +1,5 @@
+{
+	"name": "@dmail/url-search-params",
+	"version": "0.0.1",
+	"description": "UrlSearchParams polyfill"
+}
