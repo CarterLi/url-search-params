@@ -2,6 +2,7 @@
 	"name": "@dmail/url-search-params",
 	"version": "0.0.1",
 	"description": "UrlSearchParams polyfill",
+	"license": "UNLICENSED",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/dmail/url-search-params"
