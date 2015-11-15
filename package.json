@@ -6,5 +6,8 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/dmail/url-search-params"
+	},
+	"scripts": {
+		"test": "node test"
 	}
 }
