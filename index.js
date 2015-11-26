@@ -1,115 +1,98 @@
 // https://github.com/WebReflection/url-search-params/tree/master/src
 
-(function(global){
+(function(global) {
+  'use strict';
 
-	var replace = {
-		'!': '%21',
-		"'": '%27',
-		'(': '%28',
-		')': '%29',
-		'~': '%7E',
-		'%20': '+',
-		'%00': '\x00'
-	};
+	if (!('URLSearchParams' in global)) {
+		const replace = {
+	    '!': '%21',
+	    '\'': '%27',
+	    '(': '%28',
+	    ')': '%29',
+	    '~': '%7E',
+	    '%20': '+',
+	    '%00': '\x00'
+	  };
+	  const replacer = function replacer(match) {
+	    return replace[match];
+	  };
 
-	function replacer(match){
-		return replace[match];
-	}
+	  const encode = function encode(str) {
+	    return encodeURIComponent(str).replace(/[!'\(\)~]|%20|%00/g, replacer);
+	  };
 
-	function encode(str){
-		return encodeURIComponent(str).replace(/[!'\(\)~]|%20|%00/g, replacer);
-	}
+	  const decode = function decode(str) {
+	    return decodeURIComponent(str.replace(/\+/g, ' '));
+	  };
 
-	function decode(str) {
-		return decodeURIComponent(str.replace(/\+/g, ' '));
-	}
+		global.URLSearchParams = class URLSearchParams {
+	    constructor(queryString) {
+	      this.params = {};
 
-	var URLSearchParams = {
-		constructor: function(queryString){
-			this.fromString(queryString);
-		},
+	      if (queryString) {
+	        const pairs = queryString.split('&');
 
-		fromString: function(queryString){
-			this.params = {};
+	        for (let i = 0; i < pairs.length; i++) {
+	          const value = pairs[i];
+	          const index = value.indexOf('=');
 
-			if( queryString ){
-				var index, value, pairs = queryString.split('&'), i = 0, length = pairs.length;
+	          if (index > -1) {
+	            this.append(
+	              decode(value.slice(0, index)),
+	              decode(value.slice(index + 1))
+	            );
+	          }
+	        }
+	      }
+	    }
 
-				for(;i<length;i++){
-					value = pairs[i];
-					index = value.indexOf('=');
-					if( index > -1 ){
-						this.append(
-							decode(value.slice(0, index)),
-							decode(value.slice(index + 1))
-						);
-					}
-				}
-			}
-		},
+	    append(name, value) {
+	      value = String(value);
+	      if (this.has(name)) {
+	        this.params[name].push(value);
+	      } else {
+	        this.set(name, value);
+	      }
+	    }
 
-		append: function(name, value){
-			var params = this.params;
+	    delete(name) {
+	      delete this.params[name];
+	    }
 
-			value = String(value);
-			if( name in params ){
-				params[name].push(value);
-			}
-			else{
-				params[name] = [value];
-			}
-		},
+	    get(name) {
+	      return this.has(name) ? this.params[name][0] : null;
+	    }
 
-		delete: function(name){
-			delete this.params[name];
-		},
+	    getAll(name) {
+	      return this.has(name) ? [...this.params[name]] : [];
+	    }
 
-		get: function(name){
-			var params = this.params;
-  			return name in params ? params[name][0] : null;
-		},
+	    has(name) {
+	      return this.params.hasOwnProperty(name);
+	    }
 
-		getAll: function(name){
-			var params = this.params;
-  			return name in params ? params[name].slice(0) : [];
-		},
+	    set(name, value) {
+	      value = String(value);
+	      this.params[name] = [value];
+	    }
 
-		has: function(name){
-			return name in this.params;
-		},
+	    toString() { // stringifier
+	      const query = [];
 
-		set: function(name, value){
-			value = String(value);
-			this.params[name] = [value];
-		},
+	      for (const key in this.params) {
+	        if (this.has(key)) {
+	          const name = encode(key);
+	          const value = this.params[key];
 
-		toJSON: function(){
-			return {};
-		},
+	          for (let i = 0; i < value.length; i++) {
+	            query.push(name + '=' + encode(value[i]));
+	          }
+	        }
+	      }
 
-		toString: function(){
-			var params = this.params, query = [], key, name, i, value, j;
-
-			for(key in params) {
-				name = encode(key);
-				i = 0;
-				value = params[key];
-				j = value.length;
-
-				for(;i<j;i++){
-					query.push(name + '=' + encode(value[i]));
-				}
-			}
-
-			return query.join('&');
-		}
-	};
-
-	URLSearchParams.constructor.prototype = URLSearchParams;
-	URLSearchParams = URLSearchParams.constructor;
-
-	if( false === 'URLSearchParams' in global ){
-		global.URLSearchParams = URLSearchParams;
+	      return query.join('&');
+	    }
+	  };
 	}
 
 })(typeof window != 'undefined' ? window : global);
